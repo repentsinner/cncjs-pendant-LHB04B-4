@@ -1,15 +1,17 @@
-# cncjs-pendant-keyboard
-A simple pendant based on wireless keyboard (as USB Input)
+# cncjs-pendant-LHB04B-4
 
-![Wireless keyboard](https://images-na.ssl-images-amazon.com/images/I/71d%2Bn0r4ceL._SY355_.jpg)
+A simple CNCjs pendant based on a USB 4-axis LHB04B-4 Manual Pulse Generator pendant.
+
+![LHB04B-4 pendant](https://m.media-amazon.com/images/W/MEDIAX_849526-T3/images/I/712VRMLuGwL._AC_SL1500_.jpg)
 
 ## Installation
+
 After cloning the repository to your work directory, change into this directory and run
 ```
 npm install
 ```
 
-Make sure you have installed the following packages
+On linux, make sure you have installed the following packages
 ```
 libusb-1.0-0-dev
 libudev-dev
@@ -17,10 +19,11 @@ libudev-dev
 These can be installed with apt-get.
 
 ## Usage
-Run `bin/cncjs-pendant-keyboard` to start. Pass --help to `cncjs-pendant-keyboard` for more options.
+
+Run `bin/cncjs-pendant-LHB04B-4` to start. Pass --help to `cncjs-pendant-LHB04B-4` for more options.
 
 ```
-bin/cncjs-pendant-keyboard --help
+bin/cncjs-pendant-LHB04B-4 --help
 ```
 
 Hotkeys:
