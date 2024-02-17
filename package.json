@@ -8,7 +8,7 @@
     "node": ">=4"
   },
   "bin": {
-    "cncjs-pendant-boilerplate": "./bin/cncjs-pendant-keyboard"
+    "cncjs-pendant-keyboard": "./bin/cncjs-pendant-keyboard"
   },
   "preferGlobal": true,
   "scripts": {

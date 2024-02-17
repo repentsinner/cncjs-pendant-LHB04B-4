@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
-const fs = require('fs');
-const path = require('path');
-const io = require('socket.io-client');
-const jwt = require('jsonwebtoken');
-const get = require('lodash.get');
+import * as fs from "fs";
+import * as path from "path";
+import * as io from "socket.io-client";
+import * as jwt from "jsonwebtoken";
+import * as get from "lodash.get";
 
 const generateAccessToken = function(payload, secret, expiration) {
     const token = jwt.sign(payload, secret, {
@@ -19,7 +19,7 @@ const getUserHome = function() {
     return process.env[(process.platform === 'win32') ? 'USERPROFILE' : 'HOME'];
 };
 
-module.exports = function(options, callback) {
+export default function(options, callback) {
     options = options || {};
     options.secret = get(options, 'secret', process.env['CNCJS_SECRET']);
     options.baudrate = get(options, 'baudrate', 115200);
