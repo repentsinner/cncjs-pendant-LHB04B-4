@@ -1,14 +1,14 @@
 {
-  "name": "cncjs-pendant-keyboard",
+  "name": "cncjs-pendant-xhb04b",
   "version": "0.1.0",
-  "description": "A simple keyboard pendant for cncjs.",
+  "description": "A simple xHB04B manual pulse generator pendant for cncjs.",
   "main": "./index.js",
   "type": "module",
   "engines": {
-    "node": ">=4"
+    "node": ">=10"
   },
   "bin": {
-    "cncjs-pendant-keyboard": "./bin/cncjs-pendant-keyboard"
+    "cncjs-pendant-xhb04b": "./bin/cncjs-pendant-xhb04b"
   },
   "preferGlobal": true,
   "scripts": {
@@ -16,27 +16,29 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nsfilho/cncjs-pendant-keyboard.git"
+    "url": "git+https://github.com/repentsinner/cncjs-pendant-xhb04b.git"
   },
   "keywords": [
     "cncjs",
     "pendant",
-    "keyboard"
+    "manual pulse generator"
   ],
-  "author": "Nelio Santos <nelio@e01aio.com.br>",
+  "author": "Ritchie Argue <4462072+repentsinner@users.noreply.github.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/nsfilho/cncjs-pendant-keyboard/issues"
+    "url": "https://github.com/repentsinner/cncjs-pendant-xhb04b/issues"
   },
-  "homepage": "https://github.com/nsfilho/cncjs-pendant-keyboard#readme",
+  "homepage": "https://github.com/repentsinner/cncjs-pendant-xhb04b#readme",
   "dependencies": {
     "commander": "^12.0.0",
     "inquirer": "^9.2.14",
     "jsonwebtoken": "^9.0.2",
     "lodash.get": "^4.4.2",
+    "node-hid": "^3.0.0",
     "serialport": "^12.0.0",
-    "socket.io-client": "^4.7.4",
-    "vorpal": "^1.12.0",
-    "node-hid": "^3.0.0"
+    "socket.io-client": "^4.7.4"
+  },
+  "devDependencies": {
+    "@types/inquirer": "^9.0.7"
   }
 }

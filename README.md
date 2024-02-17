@@ -28,4 +28,4 @@ bin/cncjs-pendant-LHB04B-4 --help
 
 Hotkeys:
 
-![Hotkeys](https://raw.githubusercontent.com/nsfilho/cncjs-pendant-keyboard/master/docs/keysinfo.png)
+![Hotkeys](https://raw.githubusercontent.com/repentsinner/cncjs-pendant-xhb04b/master/docs/keysinfo.png)
