@@ -34,20 +34,12 @@ program
         "30d"
     );
 
-program.parse(process.argv);
-
-var options = {
-    secret: program.secret,
-    port: program.port,
-    baudrate: program.baudrate,
-    socketAddress: program.socketAddress,
-    socketPort: program.socketPort,
-    controllerType: program.controllerType,
-    accessTokenLifetime: program.accessTokenLifetime
-};
+program.parse();
+var options = program.opts();
 
 if (options.list) {
-    serialport.list(function(err, ports) {
+    console.log("List of available ports:");
+    SerialPort.list(function(err, ports) {
         if (err) {
             console.error(err);
             process.exit(1);
@@ -55,6 +47,10 @@ if (options.list) {
         ports.forEach(function(port) {
             console.log(port.comName);
         });
+        console.log(ports.length + " port(s) found.");
+        if (ports.length === 0) {
+            console.log("No serial ports found.");
+        }
     });
     //return;
 }
@@ -122,12 +118,12 @@ var createServer = function(options) {
                 .devices()
                 .find(
                     item =>
-                        item.vendorId === 26881 &&
-                        item.productId === 9985 &&
+                        item.vendorId === 0x10ce &&
+                        item.productId === 0xeb93 &&
                         item.interface === deviceInterface
                 ).path;
 
-        console.log("Keyboard HID Address:", findPath(0), " & ", findPath(1));
+        console.log("MPG HID Address:", findPath(0), " & ", findPath(1));
         var keyboard_main = new hid.HID(findPath(0));
         var keyboard_extra = new hid.HID(findPath(1));
 
