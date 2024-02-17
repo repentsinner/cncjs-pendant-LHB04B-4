@@ -6,7 +6,6 @@ import * as inquirer from "inquirer";
 import * as pkg from "../package.json" with {type: "json"};
 import * as serverMain from "../index.js";
 import * as hid from "node-hid";
-var options = {};
 
 const program = new Command();
 
@@ -34,8 +33,7 @@ program
         "30d"
     );
 
-program.parse();
-var options = program.opts();
+const options = program.parse().opts();
 
 if (options.list) {
     console.log("List of available ports:");
