@@ -1,6 +1,6 @@
-# cncjs-pendant-LHB04B-4
+# cncjs-pendant-xHB04B
 
-A simple CNCjs pendant based on a USB 4-axis LHB04B-4 Manual Pulse Generator pendant.
+A simple CNCjs pendant based on a USB 4/6-axis xHB04B-4 Manual Pulse Generator pendant.
 
 ![LHB04B-4 pendant](https://m.media-amazon.com/images/W/MEDIAX_849526-T3/images/I/712VRMLuGwL._AC_SL1500_.jpg)
 
