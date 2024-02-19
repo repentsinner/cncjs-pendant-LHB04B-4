@@ -1,92 +1,104 @@
 #!/usr/bin/env node
 
-import * as fs from "fs";
-import * as path from "path";
-import * as io from "socket.io-client";
-import * as jwt from "jsonwebtoken";
-import * as get from "lodash.get";
+import * as fs from 'fs';
+import * as path from 'path';
+import * as io from 'socket.io-client';
+import * as jwt from 'jsonwebtoken';
+import * as get from 'lodash.get';
 
 const generateAccessToken = function(payload, secret, expiration) {
-    const token = jwt.sign(payload, secret, {
-        expiresIn: expiration
-    });
+  const token = jwt.sign(payload, secret, {
+    expiresIn: expiration,
+  });
 
-    return token;
+  return token;
 };
 
 // Get secret key from the config file and generate an access token
 const getUserHome = function() {
-    return process.env[(process.platform === 'win32') ? 'USERPROFILE' : 'HOME'];
+  return process.env[(process.platform === 'win32') ? 'USERPROFILE' : 'HOME'];
 };
 
+/**
+ * Description of the function.
+ *
+ * @param {object} options - The options for the function.
+ * @param {function} callback - The callback function.
+ */
 export default function(options, callback) {
-    options = options || {};
-    options.secret = get(options, 'secret', process.env['CNCJS_SECRET']);
-    options.baudrate = get(options, 'baudrate', 115200);
-    options.socketAddress = get(options, 'socketAddress', 'localhost');
-    options.socketPort = get(options, 'socketPort', 8000);
-    options.controllerType = get(options, 'controllerType', 'Grbl');
-    options.accessTokenLifetime = get(options, 'accessTokenLifetime', '30d');
+  options = options || {};
+  options.secret = get(options, 'secret', process.env['CNCJS_SECRET']);
+  options.baudrate = get(options, 'baudrate', 115200);
+  options.socketAddress = get(options, 'socketAddress', 'localhost');
+  options.socketPort = get(options, 'socketPort', 8000);
+  options.controllerType = get(options, 'controllerType', 'Grbl');
+  options.accessTokenLifetime = get(options, 'accessTokenLifetime', '30d');
 
-    if (!options.secret) {
-        const cncrc = path.resolve(getUserHome(), '.cncrc');
-        try {
-            const config = JSON.parse(fs.readFileSync(cncrc, 'utf8'));
-            options.secret = config.secret;
-        } catch (err) {
-            console.error(err);
-            process.exit(1);
-        }
+  if (!options.secret) {
+    const cncrc = path.resolve(getUserHome(), '.cncrc');
+    try {
+      const config = JSON.parse(fs.readFileSync(cncrc, 'utf8'));
+      options.secret = config.secret;
+    } catch (err) {
+      console.error(err);
+      process.exit(1);
     }
+  }
 
-    const token = generateAccessToken({ id: '', name: 'cncjs-pendant' }, options.secret, options.accessTokenLifetime);
-    const url = 'ws://' + options.socketAddress + ':' + options.socketPort + '?token=' + token;
+  const token = generateAccessToken(
+      {id: '', name: 'cncjs-pendant'},
+      options.secret,
+      options.accessTokenLifetime,
+  );
+  const url = 'ws://' + options.socketAddress + ':' + options.socketPort + '?token=' + token;
 
-    socket = io.connect('ws://' + options.socketAddress + ':' + options.socketPort, {
-        'query': 'token=' + token
+  socket = io.connect('ws://' + options.socketAddress + ':' + options.socketPort, {
+    'query': 'token=' + token,
+  });
+
+  socket.on('connect', () => {
+    console.log('Connected to ' + url);
+
+    // Open port
+    socket.emit('open', options.port, {
+      baudrate: Number(options.baudrate),
+      controllerType: options.controllerType,
     });
+  });
 
-    socket.on('connect', () => {
-        console.log('Connected to ' + url);
+  socket.on('error', (_err) => {
+    console.error('Connection error.');
+    if (socket) {
+      socket.destroy();
+      socket = null;
+    }
+  });
 
-        // Open port
-        socket.emit('open', options.port, {
-            baudrate: Number(options.baudrate),
-            controllerType: options.controllerType
-        });
-    });
+  socket.on('close', () => {
+    console.log('Connection closed.');
+  });
 
-    socket.on('error', (err) => {
-        console.error('Connection error.');
-        if (socket) {
-            socket.destroy();
-            socket = null;
-        }
-    });
+  socket.on('serialport:open', function(options) {
+    options = options || {};
 
-    socket.on('close', () => {
-        console.log('Connection closed.');
-    });
+    console.log(
+        'Connected to port "' +
+        options.port +
+        '" (Baud rate: ' + options.baudrate + ')');
 
-    socket.on('serialport:open', function(options) {
-        options = options || {};
+    callback(null, socket);
+  });
 
-        console.log('Connected to port "' + options.port + '" (Baud rate: ' + options.baudrate + ')');
+  socket.on('serialport:error', function(options) {
+    callback(new Error('Error opening serial port "' + options.port + '"'));
+  });
 
-        callback(null, socket);
-    });
-
-    socket.on('serialport:error', function(options) {
-        callback(new Error('Error opening serial port "' + options.port + '"'));
-    });
-
-    socket.on('serialport:read', function(data) {
-        console.log((data || '').trim());
-    });
+  socket.on('serialport:read', function(data) {
+    console.log((data || '').trim());
+  });
 
 
-    socket.on('serialport:write', function(data) {
-        console.log((data || '').trim());
-    });
-
+  socket.on('serialport:write', function(data) {
+    console.log((data || '').trim());
+  });
 };

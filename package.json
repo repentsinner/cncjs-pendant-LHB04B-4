@@ -39,6 +39,8 @@
     "socket.io-client": "^4.7.4"
   },
   "devDependencies": {
-    "@types/inquirer": "^9.0.7"
+    "@types/inquirer": "^9.0.7",
+    "eslint": "^8.56.0",
+    "eslint-config-google": "^0.14.0"
   }
 }
