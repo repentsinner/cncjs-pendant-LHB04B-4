@@ -3,11 +3,13 @@
 import {Command} from 'commander';
 import {SerialPort} from 'serialport';
 import * as inquirer from 'inquirer';
+// TODO: importing json is still experimental; using the old parser suppresses
+// eslint failures and node warnings for now
 // import * as pkg from "../package.json" with {type: "json"};
 import {readFile} from 'node:fs/promises';
 const fileUrl = new URL('../package.json', import.meta.url);
 const pkg = JSON.parse(await readFile(fileUrl, 'utf8'));
-import * as serverMain from '../index.js';
+import {serverMain} from '../index.js';
 import * as hid from 'node-hid';
 
 const program = new Command();
@@ -80,6 +82,7 @@ const kbdevent = {
 };
 
 const createServer = function(options) {
+  console.log('Creating server with options:', options);
   serverMain(options, function(err, socket) {
     // Grbl
     socket.on('Grbl:state', function(state) {

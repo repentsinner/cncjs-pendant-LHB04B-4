@@ -3,8 +3,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as io from 'socket.io-client';
-import * as jwt from 'jsonwebtoken';
-import * as get from 'lodash.get';
+import jwt from 'jsonwebtoken';
+import get from 'lodash.get';
 
 const generateAccessToken = function(payload, secret, expiration) {
   const token = jwt.sign(payload, secret, {
@@ -25,8 +25,9 @@ const getUserHome = function() {
  * @param {object} options - The options for the function.
  * @param {function} callback - The callback function.
  */
-export default function(options, callback) {
+export function serverMain(options, callback) {
   options = options || {};
+  console.log('options', options);
   options.secret = get(options, 'secret', process.env['CNCJS_SECRET']);
   options.baudrate = get(options, 'baudrate', 115200);
   options.socketAddress = get(options, 'socketAddress', 'localhost');
@@ -52,7 +53,7 @@ export default function(options, callback) {
   );
   const url = 'ws://' + options.socketAddress + ':' + options.socketPort + '?token=' + token;
 
-  socket = io.connect('ws://' + options.socketAddress + ':' + options.socketPort, {
+  const socket = io.connect('ws://' + options.socketAddress + ':' + options.socketPort, {
     'query': 'token=' + token,
   });
 
