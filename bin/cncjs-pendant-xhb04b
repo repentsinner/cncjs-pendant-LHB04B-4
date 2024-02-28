@@ -81,8 +81,34 @@ const kbdevent = {
   default_move: 1, // Alter by F1, F2, F3
 };
 
+const mpgevent = {
+  mpg_ccw: 0,
+  mpg_cw: 0,
+  off_axis: 0,
+  x_axis: 0,
+  y_axis: 0,
+  z_axis: 0,
+  a_axis: 0,
+  rate_002: 0,
+  rate_005: 0,
+  rate_010: 0,
+  rate_030: 0,
+  rate_060: 0,
+  rate_100: 0,
+  rate_lead: 0,
+  button_01: 0,
+  button_02: 0,
+  repeating: 0,
+  can_repeat: 1,
+};
+
+/**
+ * Why does this pendant need to know about the controller protocol?
+ * Can't CNCjs handle that?
+ * @param {object} options dictionary of command-line options
+ */
 const createServer = function(options) {
-  console.log('Creating server with options:', options);
+  console.log('Creating xHB04B server with options:', options);
   serverMain(options, function(err, socket) {
     // Grbl
     socket.on('Grbl:state', function(state) {
@@ -113,44 +139,66 @@ const createServer = function(options) {
       store.sender.status = data;
     });
 
-    const findPath = (deviceInterface) =>
+    const findPath = (vendorId, productId, deviceInterface) =>
       hid
           .devices()
           .find(
               (item) =>
-                item.vendorId === 0x10ce &&
-                        item.productId === 0xeb93 &&
-                        item.interface === deviceInterface,
+                item.vendorId === vendorId &&
+                item.productId === productId &&
+                item.interface === deviceInterface,
           ).path;
+    const mpg = new hid.HID(findPath(0x10ce, 0xeb93, 0));
+    // const keyboardExtra = new hid.HID(findPath(0));
 
-    console.log('MPG HID Address:', findPath(0), ' & ', findPath(1));
-    const keyboardMain = new hid.HID(findPath(0));
-    const keyboardExtra = new hid.HID(findPath(1));
-
-    keyboardMain.on('data', function(data) {
+    /**
+     * if this frame of data is the same as the last frame,
+     * set the repeating flag? Only unset repeating if the data
+     * returns to zero in the meantime?
+     */
+    mpg.on('data', function(data) {
       const recv = data.toJSON().data;
-      const bits = recv.shift();
-      kbdevent.l_control = (bits & 1) !== 0;
-      kbdevent.l_shift = (bits & 2) !== 0;
-      kbdevent.l_alt = (bits & 4) !== 0;
-      kbdevent.l_meta = (bits & 8) !== 0;
-      kbdevent.r_control = (bits & 16) !== 0;
-      kbdevent.r_shift = (bits & 32) !== 0;
-      kbdevent.r_alt = (bits & 64) !== 0;
-      kbdevent.r_meta = (bits & 128) !== 0;
-      recv.shift();
-      kbdevent.key = recv.shift();
-      kbdevent.repeating = 0;
+      mpgevent.button_01 = recv[2];
+      mpgevent.button_02 = recv[3];
+
+      mpgevent.off_axis = recv[5] === 6;
+      mpgevent.x_axis = recv[5] === 17;
+      mpgevent.y_axis = recv[5] === 18;
+      mpgevent.z_axis = recv[5] === 19;
+      mpgevent.a_axis = recv[5] === 20;
+
+      mpgevent.rate_002 = recv[4] === 13;
+      mpgevent.rate_005 = recv[4] === 14;
+      mpgevent.rate_010 = recv[4] === 15;
+      mpgevent.rate_030 = recv[4] === 16;
+      mpgevent.rate_060 = recv[4] === 26;
+      mpgevent.rate_100 = recv[4] === 27;
+      mpgevent.rate_lead = recv[4] === 28;
+
+      mpgevent.mpg_ccw = recv[6];
+      mpgevent.mpg_cw = recv[6];
+      console.log(mpgevent);
+      //   kbdevent.l_control = (bits & 1) !== 0;
+      //   kbdevent.l_shift = (bits & 2) !== 0;
+      //   kbdevent.l_alt = (bits & 4) !== 0;
+      //   kbdevent.l_meta = (bits & 8) !== 0;
+      //   kbdevent.r_control = (bits & 16) !== 0;
+      //   kbdevent.r_shift = (bits & 32) !== 0;
+      //   kbdevent.r_alt = (bits & 64) !== 0;
+      //   kbdevent.r_meta = (bits & 128) !== 0;
+      //   recv.shift();
+      //   kbdevent.key = recv.shift();
+      //   kbdevent.repeating = 0;
       sendToController();
     });
 
-    keyboardExtra.on('data', function(data) {
-      const recv = data.toJSON().data;
-      recv.shift();
-      kbdevent.extra = recv.shift();
-      kbdevent.repeating = 0;
-      sendToController();
-    });
+    // keyboardExtra.on('data', function(data) {
+    //   const recv = data.toJSON().data;
+    //   recv.shift();
+    //   kbdevent.extra = recv.shift();
+    //   kbdevent.repeating = 0;
+    //   sendToController();
+    // });
 
     /**
      * Send to controller
@@ -268,7 +316,7 @@ const createServer = function(options) {
         kbdevent.repeating = 0;
       }
 
-      console.log(kbdevent);
+      // console.log(kbdevent);
     }
   });
 };

@@ -102,4 +102,6 @@ export function serverMain(options, callback) {
   socket.on('serialport:write', function(data) {
     console.log((data || '').trim());
   });
+  // force callback to debug HID component
+  callback(null, socket);
 };
