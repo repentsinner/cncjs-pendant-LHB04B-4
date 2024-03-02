@@ -102,6 +102,16 @@ const mpgevent = {
   can_repeat: 1,
 };
 
+const mpgdisplay = {
+  stepType: 0,
+  x: 0,
+  y: 0,
+  z: 0,
+  a: 0,
+  b: 0,
+  c: 0,
+};
+
 /**
  * Why does this pendant need to know about the controller protocol?
  * Can't CNCjs handle that?
@@ -191,16 +201,72 @@ const createServer = function(options) {
       //   kbdevent.repeating = 0;
       sendToController();
 
-      mpg.sendFeatureReport([0x06, 0xfe, 0xfd, 0xfe, 0x01, 0x00, 0x00, 0x00]);
-      mpg.sendFeatureReport([0x06, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00]);
-      mpg.sendFeatureReport([0x06, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x01, 0x01]);
+      const x = floatToBytes(10000.0001);
+      const y = floatToBytes(-1234.5678);
+      const z = floatToBytes(1.1);
+
+      mpg.sendFeatureReport([0x06,
+        0xfe, // frame start code
+        0xfd, // frame start code
+        0xfe, // frame start code
+        mpgdisplay.stepType,
+        x[0], // X/A
+        x[1], // X/A
+        x[2], // X/A
+      ]);
+      mpg.sendFeatureReport([0x06,
+        x[3], // X/A
+        y[0], // Y/B
+        y[1], // Y/B
+        y[2], // Y/B
+        y[3], // Y/B
+        z[0], // Z/C
+        z[1], // Z/C
+      ]);
+      mpg.sendFeatureReport([0x06,
+        z[2], // Z/C
+        z[3], // Z/C
+        0x00, // unused/padding?
+        0x00, // unused/padding?
+        0x00, // unused/padding?
+        0x00, // unused/padding?
+        0x00, // unused/padding?
+      ]);
+      // unused/padding?
       mpg.sendFeatureReport([0x06, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00]);
-      // reset
+      // reset?
       // mpg.sendFeatureReport([0x04, 0x01]);
     });
+
+    /**
+     * Convert a float to an array of bytes
+     * [0] = integer part LSB
+     * [1] = integer part MSB
+     * [2] = fractional part LSB
+     * [3] = fractional part MSB, sign
+     * @param {number} value - float to convert
+     * @return {Uint8Array} - converted array of bytes
+     */
+    function floatToBytes(value) {
+      const bytes = new Uint8Array(4);
+
+      // extract sign
+      const sign = value < 0 ? 0x80 : 0;
+      value = Math.abs(value);
+
+      // extract integer portion
+      bytes[0] = value & 0xff;
+      bytes[1] = (value >> 8) & 0xff;
+
+      // truncate fractional portion to 9999
+      value = (value % 1) * 10000;
+      bytes[2] = value & 0xff;
+      bytes[3] = (value >> 8) & 0xff;
+      bytes[3] += sign;
+
+      return bytes;
+    };
 
     // keyboardExtra.on('data', function(data) {
     //   const recv = data.toJSON().data;
