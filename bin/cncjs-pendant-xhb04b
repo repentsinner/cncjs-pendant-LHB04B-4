@@ -120,7 +120,6 @@ const mpgdisplay = {
  * @param {object} options dictionary of command-line options
  */
 const createServer = function(options) {
-  console.log('Creating xHB04B server with options:', options);
   serverMain(options, function(err, socket) {
     // Grbl
     socket.on('Grbl:state', function(state) {

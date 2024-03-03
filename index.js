@@ -2,6 +2,8 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+// Note that CNCjs app build is still using socket.io v2.x 🤮, and this will fail
+// to connect if we use v3.x or v4.x
 import * as io from 'socket.io-client';
 import jwt from 'jsonwebtoken';
 import get from 'lodash.get';
@@ -57,7 +59,6 @@ export function serverMain(options, callback) {
   const socket = io.connect('ws://' + options.socketAddress + ':' + options.socketPort, {
     'query': 'token=' + token,
   });
-  console.log(socket);
 
   socket.on('connect', () => {
     console.log('Connected to ' + url);
@@ -104,6 +105,4 @@ export function serverMain(options, callback) {
   socket.on('serialport:write', function(data) {
     console.log((data || '').trim());
   });
-  // force callback to debug HID component
-  callback(null, socket);
 };
