@@ -16,26 +16,28 @@ const program = new Command();
 
 program
     .version(`${pkg.version}`)
-    .usage('-s <secret> -p <port> [options]')
+    .usage('-p <port> [options]')
     .option('-l, --list', 'list available ports then exit')
+    .option('-p, --port <port>', 'path or name of serial port for the ' +
+    'machine controller')
     .option('-s, --secret <secret>',
-        'the secret key stored in the ~/.cncrc file')
-    .option('-p, --port <port>', 'path or name of serial port')
-    .option('-b, --baudrate <baudrate>', 'baud rate (default: 115200)', 115200)
+        'the secret key stored in the ~/.cncrc file. Not necessary to pass ' +
+        'as an option if running on the same machine as cncjs.')
+    .option('-b, --baudrate <baudrate>', 'baud rate', 115200)
     .option(
         '--socket-address <address>',
-        'socket address or hostname (default: localhost)',
+        'socket address or hostname',
         'localhost',
     )
-    .option('--socket-port <port>', 'socket port (default: 8000)', 8000)
+    .option('--socket-port <port>', 'socket port', 8000)
     .option(
         '--controller-type <type>',
-        'controller type: Grbl|Smoothie|TinyG (default: Grbl)',
+        'controller type: Grbl|Smoothie|TinyG',
         'Grbl',
     )
     .option(
         '--access-token-lifetime <lifetime>',
-        'access token lifetime in seconds or a time span string (default: 30d)',
+        'access token lifetime in seconds or a time span string',
         '30d',
     );
 
@@ -158,8 +160,11 @@ const createServer = function(options) {
                 item.productId === productId &&
                 item.interface === deviceInterface,
           ).path;
-    const mpg = new hid.HID(findPath(0x10ce, 0xeb93, 0));
-    // const keyboardExtra = new hid.HID(findPath(0));
+    const mpg = new hid.HID(findPath(
+        0x10ce, // KTURT.LTD
+        0xeb93,
+        0,
+    ));
 
     /**
      * if this frame of data is the same as the last frame,
@@ -187,7 +192,8 @@ const createServer = function(options) {
 
       mpgevent.mpg_ccw = recv[6];
       mpgevent.mpg_cw = recv[6];
-      console.log(mpgevent);
+      // console.log(mpgevent);
+
       //   kbdevent.l_control = (bits & 1) !== 0;
       //   kbdevent.l_shift = (bits & 2) !== 0;
       //   kbdevent.l_alt = (bits & 4) !== 0;
@@ -201,40 +207,7 @@ const createServer = function(options) {
       //   kbdevent.repeating = 0;
       sendToController();
 
-      const x = floatToBytes(10000.0001);
-      const y = floatToBytes(-1234.5678);
-      const z = floatToBytes(1.1);
-
-      mpg.sendFeatureReport([0x06,
-        0xfe, // frame start code
-        0xfd, // frame start code
-        0xfe, // frame start code
-        mpgdisplay.stepType,
-        x[0], // X/A
-        x[1], // X/A
-        x[2], // X/A
-      ]);
-      mpg.sendFeatureReport([0x06,
-        x[3], // X/A
-        y[0], // Y/B
-        y[1], // Y/B
-        y[2], // Y/B
-        y[3], // Y/B
-        z[0], // Z/C
-        z[1], // Z/C
-      ]);
-      mpg.sendFeatureReport([0x06,
-        z[2], // Z/C
-        z[3], // Z/C
-        0x00, // unused/padding?
-        0x00, // unused/padding?
-        0x00, // unused/padding?
-        0x00, // unused/padding?
-        0x00, // unused/padding?
-      ]);
-      // unused/padding?
-      mpg.sendFeatureReport([0x06, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00]);
+      readFromController();
       // reset?
       // mpg.sendFeatureReport([0x04, 0x01]);
     });
@@ -330,6 +303,15 @@ const createServer = function(options) {
         default:
           break;
       }
+
+      switch (mpgevent.button_01) {
+        case 8: // M-HOME
+          socket.emit('write', options.port, 'G90 X0 Y0 Z0;\n');
+          break;
+        default:
+          break;
+      }
+
       switch (kbdevent.key) {
         case 80: // arrow: left
           socket.emit(
@@ -391,18 +373,54 @@ const createServer = function(options) {
       } else {
         kbdevent.repeating = 0;
       }
+    }
 
-      // console.log(kbdevent);
+    /**
+     * Read from controller
+     */
+    function readFromController() {
+      // socket.emit('read', options.port);
+      mpgdisplay.stepType = 1;
+      const x = floatToBytes(10000.0001);
+      const y = floatToBytes(-1234.5678);
+      const z = floatToBytes(1.1);
+
+      mpg.sendFeatureReport([0x06,
+        0xfe, // frame start code
+        0xfd, // frame start code
+        0xfe, // frame start code
+        mpgdisplay.stepType,
+        x[0], // X/A
+        x[1], // X/A
+        x[2], // X/A
+      ]);
+      mpg.sendFeatureReport([0x06,
+        x[3], // X/A
+        y[0], // Y/B
+        y[1], // Y/B
+        y[2], // Y/B
+        y[3], // Y/B
+        z[0], // Z/C
+        z[1], // Z/C
+      ]);
+      mpg.sendFeatureReport([0x06,
+        z[2], // Z/C
+        z[3], // Z/C
+        0x00, // unused/padding?
+        0x00, // unused/padding?
+        0x00, // unused/padding?
+        0x00, // unused/padding?
+        0x00, // unused/padding?
+      ]);
+      // unused/padding?
+      mpg.sendFeatureReport([0x06, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00]);
     }
   });
 };
 
-// console.log('List of connected devices (paths): ');
-// console.log('devices:', hid.devices());
-
 if (options.port) {
   createServer(options);
-  // return;
 }
 
 SerialPort.list(function(err, ports) {

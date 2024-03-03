@@ -14,20 +14,20 @@ const generateAccessToken = function(payload, secret, expiration) {
   return token;
 };
 
-// Get secret key from the config file and generate an access token
+// Get location of local config file
 const getUserHome = function() {
   return process.env[(process.platform === 'win32') ? 'USERPROFILE' : 'HOME'];
 };
 
 /**
- * Description of the function.
+ * TODO: this seems to double-define defaults that are already defined
+ * in bin/cncjs-pendant-xxx
  *
  * @param {object} options - The options for the function.
  * @param {function} callback - The callback function.
  */
 export function serverMain(options, callback) {
   options = options || {};
-  console.log('options', options);
   options.secret = get(options, 'secret', process.env['CNCJS_SECRET']);
   options.baudrate = get(options, 'baudrate', 115200);
   options.socketAddress = get(options, 'socketAddress', 'localhost');
@@ -45,6 +45,7 @@ export function serverMain(options, callback) {
       process.exit(1);
     }
   }
+  console.log('options', options);
 
   const token = generateAccessToken(
       {id: '', name: 'cncjs-pendant'},
@@ -56,6 +57,7 @@ export function serverMain(options, callback) {
   const socket = io.connect('ws://' + options.socketAddress + ':' + options.socketPort, {
     'query': 'token=' + token,
   });
+  console.log(socket);
 
   socket.on('connect', () => {
     console.log('Connected to ' + url);
