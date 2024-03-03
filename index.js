@@ -55,7 +55,7 @@ export function serverMain(options, callback) {
       options.accessTokenLifetime,
   );
 
-  const url = 'ws://' + options.socketAddress + ':' + options.socketPort + '?token=' + token;
+  const url = new URL('ws://' + options.socketAddress + ':' + options.socketPort + '?token=' + token);
 
   const socket = io.connect('ws://' + options.socketAddress + ':' + options.socketPort, {
     'query': 'token=' + token,
@@ -64,14 +64,23 @@ export function serverMain(options, callback) {
   socket.on('connect', () => {
     console.log('Connected to CNCjs instance at ' + url);
 
+    // request list of serial ports
+    if (options.list) {
+      socket.emit('list');
+      // where should the callback be handled?
+      // callback(null, socket);
+    };
+
     // Open server's serial port
     // why is this not in `serialport:doOpen` or `sender.open` or somesuch
     // namespace? The callback is `serialport:open`
     // (instead of `serialport:onOpen`)...
-    socket.emit('open', options.port, {
-      baudrate: Number(options.baudrate),
-      controllerType: options.controllerType,
-    });
+    if (options.port) {
+      socket.emit('open', options.port, {
+        baudrate: Number(options.baudrate),
+        controllerType: options.controllerType,
+      });
+    }
   });
 
   socket.on('error', (_err) => {
@@ -84,6 +93,12 @@ export function serverMain(options, callback) {
 
   socket.on('close', () => {
     console.log('Connection closed.');
+  });
+
+  socket.on('serialport:list', function(ports) {
+    console.log(ports);
+
+    callback(null, socket);
   });
 
   socket.on('serialport:open', function(options) {

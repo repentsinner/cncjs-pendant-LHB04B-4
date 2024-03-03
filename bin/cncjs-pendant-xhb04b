@@ -43,21 +43,6 @@ program
 
 const options = program.parse().opts();
 
-if (options.list) {
-  // TODO: why is this not querying the server's serial ports? unless running
-  // locally, this is useless.
-  const ports = await SerialPort.list();
-
-  if (ports.length === 0) {
-    console.log('No serial ports found.');
-  } else {
-    console.log('Available serial ports:');
-    ports.forEach(function(port) {
-      console.log(port.path);
-    });
-  }
-}
-
 const store = {
   controller: {
     state: {},
@@ -123,11 +108,16 @@ const mpgdisplay = {
  */
 const createServer = function(options) {
   serverMain(options, function(err, socket) {
-    // handle server error
+    // server error
     if (err) {
       console.error(err);
       process.exit(1);
     }
+
+    // serial port list
+    socket.on('serialport:list', function(ports) {
+      console.log(ports);
+    });
 
     // Grbl
     socket.on('Grbl:state', function(state) {
@@ -166,12 +156,20 @@ const createServer = function(options) {
                 item.vendorId === vendorId &&
                 item.productId === productId &&
                 item.interface === deviceInterface,
-          ).path;
-    const mpg = new hid.HID(findPath(
-        0x10ce, // KTURT.LTD
-        0xeb93,
-        0,
-    ));
+          )?.path;
+
+    const mpg = (function() {
+      try {
+        return new hid.HID(findPath(
+            0x10ce, // KTURT.LTD
+            0xeb93,
+            0,
+        ));
+      } catch (TypeError) {
+        console.error('No MPG found, exiting.');
+        process.exit(1);
+      }
+    })();
 
     /**
      * if this frame of data is the same as the last frame,
@@ -426,8 +424,25 @@ const createServer = function(options) {
   });
 };
 
-if (options.port) {
+/**
+ * connect to CNCjs server
+ */
+if (options.list || options.port) {
   createServer(options);
+
+  // TODO: why is this not querying the server's serial ports? unless running
+  // locally, this is useless.
+
+  // const ports = await SerialPort.list();
+
+  // if (ports.length === 0) {
+  //   console.log('No serial ports found.');
+  // } else {
+  //   console.log('Available serial ports:');
+  //   ports.forEach(function(port) {
+  //     console.log(port.path);
+  //   });
+  // }
 }
 
 SerialPort.list(function(err, ports) {
