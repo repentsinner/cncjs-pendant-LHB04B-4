@@ -20,11 +20,16 @@ These can be installed with apt-get.
 
 ## Usage
 
-Run `bin/cncjs-pendant-LHB04B-4` to start. Pass --help to `cncjs-pendant-LHB04B-4` for more options.
+Run `bin/cncjs-pendant-LHB04B-4` to start. Pass `--help` to `cncjs-pendant-LHB04B-4` for more options.
 
 ```
 bin/cncjs-pendant-LHB04B-4 --help
 ```
+
+### Notes
+* To figure out the random socket.io listening port used to communicate with the CNCjs server, select `View in browser` from the `View` menu
+* If running on the same machine as the server, the secret key will automatically be extracted from the `.cncrc` file (why is this not `.cncjsrc`?!?)
+* `--list` will list the _local_ serial ports, not the server's serial ports. WTF.
 
 Hotkeys:
 

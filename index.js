@@ -54,6 +54,7 @@ export function serverMain(options, callback) {
       options.secret,
       options.accessTokenLifetime,
   );
+
   const url = 'ws://' + options.socketAddress + ':' + options.socketPort + '?token=' + token;
 
   const socket = io.connect('ws://' + options.socketAddress + ':' + options.socketPort, {
@@ -61,9 +62,12 @@ export function serverMain(options, callback) {
   });
 
   socket.on('connect', () => {
-    console.log('Connected to ' + url);
+    console.log('Connected to CNCjs instance at ' + url);
 
-    // Open port
+    // Open server's serial port
+    // why is this not in `serialport:doOpen` or `sender.open` or somesuch
+    // namespace? The callback is `serialport:open`
+    // (instead of `serialport:onOpen`)...
     socket.emit('open', options.port, {
       baudrate: Number(options.baudrate),
       controllerType: options.controllerType,
@@ -71,7 +75,7 @@ export function serverMain(options, callback) {
   });
 
   socket.on('error', (_err) => {
-    console.error('Connection error.');
+    console.error('Error connecting to CNCjs instance at ' + url);
     if (socket) {
       socket.destroy();
       socket = null;

@@ -44,6 +44,8 @@ program
 const options = program.parse().opts();
 
 if (options.list) {
+  // TODO: why is this not querying the server's serial ports? unless running
+  // locally, this is useless.
   const ports = await SerialPort.list();
 
   if (ports.length === 0) {
@@ -121,6 +123,12 @@ const mpgdisplay = {
  */
 const createServer = function(options) {
   serverMain(options, function(err, socket) {
+    // handle server error
+    if (err) {
+      console.error(err);
+      process.exit(1);
+    }
+
     // Grbl
     socket.on('Grbl:state', function(state) {
       store.controller.state = state;
