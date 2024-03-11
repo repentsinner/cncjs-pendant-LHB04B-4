@@ -71,8 +71,7 @@ const kbdevent = {
 };
 
 const mpgevent = {
-  mpg_ccw: 0,
-  mpg_cw: 0,
+  mpg: 0,
   off_axis: 0,
   x_axis: 0,
   y_axis: 0,
@@ -195,8 +194,7 @@ const createServer = function(options) {
       mpgevent.rate_100 = recv[4] === 27;
       mpgevent.rate_lead = recv[4] === 28;
 
-      mpgevent.mpg_ccw = recv[6];
-      mpgevent.mpg_cw = recv[6];
+      mpgevent.mpg = recv[6] > 128 ? recv[6] - 256 : recv[6];
       // console.log(mpgevent);
 
       //   kbdevent.l_control = (bits & 1) !== 0;
@@ -315,6 +313,19 @@ const createServer = function(options) {
           break;
         default:
           break;
+      }
+
+      // TODO: does not check for machine boundaries before moving
+      if (mpgevent.off_axis !== 1 && mpgevent.mpg) {
+        const axis =
+            mpgevent.x_axis ? 'X' :
+            mpgevent.y_axis ? 'Y' :
+            mpgevent.z_axis ? 'Z' :
+            mpgevent.a_axis ? 'A' : '';
+        socket.emit(
+            'write',
+            options.port,
+            'G91 ' + axis + mpgevent.mpg + ';\n');
       }
 
       switch (kbdevent.key) {
